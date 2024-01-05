@@ -74,27 +74,6 @@ Arabidopsis: https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_000001735.3/
 
 etc...
 
-## make bowtie index (only need to do once per genome) this is slow and can take some time. 
-```
-bowtie-build (Species)_genomic_no_space.fna (Species)_genomic
-```
-
-### Human example
-```
-bowtie-build Homo_sapiens.GRCh38.dna.primary_assembly_no_space_pl.fa Homo_sapiens.GRCh38.dna.primary_assembly_no_space_pl
-```
-
----
-
-## remove "spaces" from ref genome fasta is required by mirDeep2 ( only need to do once per genome)
-```
-sed 's/ /_/g' genome.fna > genome.fna
-```
-
-### Human example
-```
-sed 's/ /_/g' Homo_sapiens.GRCh38.dna.primary_assembly.fna > Homo_sapiens.GRCh38.dna.primary_assembly_no_space.fna
-```
 
 ## Raw FastQC
 Install SRA tool bench For Mac OS X, (or use wget if you prefer)
@@ -114,6 +93,41 @@ fastq-dump SRR950892
 fastq-dump SRR950893
 fastq-dump SRR950894
 fastq-dump SRR950895 
+```
+
+
+## This should gather these 5 types of "preliminary files" required for analysis 
+
+| file                             | description
+|----------------------------------|------------------------------------------|
+| `species.fa`                     | a FASTA file with the reference genome. |
+| `mature_ref_this_species.fa`     | a FASTA file with the reference miRBase mature miRNAs for the species |
+| `mature_ref_other_species.fa`    | a FASTA file with the reference miRBase mature miRNAs for related species |
+| `precursors_ref_this_species.fa` | a FASTA file with the reference miRBase precursor miRNAs for the species |
+| `reads.fa`                       | a FASTA file with the deep sequencing reads. |
+
+
+
+## Make bowtie index (only need to do once per genome) this is slow and can take some time. 
+```
+bowtie-build (Species)_genomic_no_space.fna (Species)_genomic
+```
+
+### Human example
+```
+bowtie-build Homo_sapiens.GRCh38.dna.primary_assembly_no_space_pl.fa Homo_sapiens.GRCh38.dna.primary_assembly_no_space_pl
+```
+
+---
+
+## remove "spaces" from ref genome fasta is required by mirDeep2 ( only need to do once per genome)
+```
+sed 's/ /_/g' genome.fna > genome.fna
+```
+
+### Human example
+```
+sed 's/ /_/g' Homo_sapiens.GRCh38.dna.primary_assembly.fna > Homo_sapiens.GRCh38.dna.primary_assembly_no_space.fna
 ```
 
 ## Pre-processing steps recommended but no code here
@@ -165,7 +179,16 @@ remove_white_space_in_id.pl mature_ut_No-HSA.fa > mature_ut_No-HSA_no_whitespace
 sed 's/ /_/g' ${sample}_trimmed.fa > ${sample}_trimmed_no_spaces.fa
 ```
 
-# running mapping replace sample with file (eg SRR950892) name or use in .sh lopp 
+# running mapping replace sample with file 
+
+The `-c` option designates that the input file is a FASTA file (for other input formats, see the `README.md` file).  
+The `-j` options removes entries with non-canonical letters (letters other than `a`, `c`, `g`, `t`, `u`, `n`, `A`, `C`, `G`, `T`, `U`, or `N`). 
+The `-k` option clips adapters.  The `-l` option discards reads shorter than 18 nts.  
+The `-m` option collapses the reads.  
+The`-p` option maps the processed reads against the previously indexed genome.  
+The `-s` option designates the name of the output file of processed reads and the `-t` option designates the name of the output file of the genome mappings. 
+Last, `-v` gives verbose output to the screen.
+
 ```
 mapper.pl ${sample}_trimmed_no_spaces.fa -c -j -k TCGTATGCCGTCTTCTGCTTGT  -l 18 -m -p ${spcies}_no_space_pl -s ${sample}_trimmed_collapsed.fa -t ${sample}_trimmed_collapsed_vs_genome.arf -v -n
 ```
@@ -175,7 +198,7 @@ mapper.pl ${sample}_trimmed_no_spaces.fa -c -j -k TCGTATGCCGTCTTCTGCTTGT  -l 18 
 mapper.pl ${sample}_trimmed_no_whitespace_pl.fastq -e -h -j -k TCGTATGCCGTCTTCTGCTTGT  -l 18 -m -p Homo_sapiens.GRCh38.dna.primary_assembly_no_space_pl -s ${sample}_trimmed_collapsed.fa -t ${sample}2_trimmed_collapsed_vs_genome_no_space_pl.arf -v -n 
 ```
 
-# running mirDeep2 with target mature or hairpin templates
+# running mirDeep2 with target mature or hairpin templates to identify known and novel miRNAs in the deep sequencing data:
 ```
 miRDeep2.pl ${sample}_trimmed_collapsed.fa Homo_sapiens.GRCh38.dna.primary_assembly_no_space_pl.fa ${sample}_trimmed_collapsed_vs_genome_no_space_pl.arf  mature_ut.part_hsa_no_whitespace.fasta mature_ut_No-HSA_NOWHITESPACE.fa hairpin_ut.part_hsa_no_whitespace.fasta -t Human 2>report.log
 ```
@@ -184,6 +207,7 @@ miRDeep2.pl ${sample}_trimmed_collapsed.fa Homo_sapiens.GRCh38.dna.primary_assem
 
 ## This script worked and produced an accurate quantification of known microRNA's and predicted detection of some new/novel microRNA's and hairpins. 
 Now to work out how to extract counts and other useful stats from the results tables. 
+Open the `results.html` using an internet browser and explore the other files. 
 
 
 Please cite
