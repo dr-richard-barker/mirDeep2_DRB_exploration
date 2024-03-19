@@ -1,4 +1,4 @@
-## These are adapted by DRB to install and run mirDeep2
+# These are adapted by DRB to install and run mirDeep2
 The miRDeep2 tutorial can be found here -> https://drmirdeep.github.io/mirdeep2_tutorial.html
 
 ### Use the files from the mirdeep2_patch repository as they are a updated version of mirdeep2 scripts which improve performance
@@ -8,7 +8,7 @@ git clone https://github.com/Drmirdeep/mirdeep2_patch.git
 The original release packages of miRDeep2 are available at
 https://github.com/rajewsky-lab/mirdeep2
 
-## Script overview
+### Script overview
 This script requires genome.fa, mature.fa, hairpin.fa, and smallRNAseq.fastq.gz as inputs.
 This script produced quantification of known and novel microRNA's and hairpin small RNAseq as text .bed and .html file format as outputs.
 This script is designed to provide commonents for a bash command executed via a .sh script. 
@@ -16,58 +16,58 @@ This script is designed to provide commonents for a bash command executed via a 
 !/usr/bin/env bash
 ``
 
-## install mini conda
+### install mini conda
 curl -LO https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
 source ~/.bashrc
 
-## install mirdeep2 using mamba
+### install mirdeep2 using mamba
 ```
 conda install -y -n base -c conda-forge mamba
 mamba create -y -n mirdeep2 -c conda-forge -c bioconda -c defaults mirdeep2
 ```
 
-## Activate a conda environment:
+### Activate a conda environment:
 ```
 conda activate mirdeep2
 ```
 
-## Download miRNA sequences from miRBase (only need to do once per genome)
+### Download miRNA sequences from miRBase (only need to do once per genome)
 https://mirbase.org/download/CURRENT/mature.fa
 https://mirbase.org/download/CURRENT/hairpin.fa
 
-## URL of the file to be downloaded
+### URL of the file to be downloaded
 ```
 URL="https://mirbase.org/download/CURRENT/hairpin.fa"
 ```
 
-## Destination folder where you want to download the file
+### Destination folder where you want to download the file
 ```
 DESTINATION_FOLDER="/path/to/your/folder"
 ```
 
-## Create the destination folder if it doesn't exist
+### Create the destination folder if it doesn't exist
 ```
 mkdir -p "$DESTINATION_FOLDER"
 ```
 
-## Use wget to download the file
+### Use wget to download the file
 ```
 wget -O "${DESTINATION_FOLDER}/hairpin.fa" "$URL"
 ```
 
-## Extract all hsa miRNA sequences from miRBase
+### Extract all hsa miRNA sequences from miRBase
 ```
 grep -A 1 --no-group-separator "^>hsa" mature_ut.fa > mature_hsa_ut.fa
 ```
 
-## remove just hsa from the mature_ut.fa file
+### remove just hsa from the mature_ut.fa file
 ```
 grep -v "^>hsa" mature_ut.fa > mature_ut_No-HSA.fa
 ```
 
 --- 
 
-## Get you reference species genome from NCBI or your favourite repo
+### Get you reference species genome from NCBI or your favourite repo
 Human: https://www.ncbi.nlm.nih.gov/genome/guide/human/
 
 Arabidopsis: https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_000001735.3/
@@ -75,7 +75,7 @@ Arabidopsis: https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_000001735.3/
 etc...
 
 
-## Raw FastQC
+### Raw FastQC
 Install SRA tool bench For Mac OS X, (or use wget if you prefer)
 ```
 curl --output sratoolkit.tar.gz https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/current/sratoolkit.current-mac64.tar.gz
@@ -96,7 +96,7 @@ fastq-dump SRR950895
 ```
 
 
-## This should gather these 5 types of "preliminary files" required for analysis 
+### This should gather these 5 types of "preliminary files" required for analysis 
 
 | file                             | description
 |----------------------------------|------------------------------------------|
@@ -108,7 +108,7 @@ fastq-dump SRR950895
 
 
 
-## Make bowtie index (only need to do once per genome) this is slow and can take some time. 
+### Make bowtie index (only need to do once per genome) this is slow and can take some time. 
 ```
 bowtie-build (Species)_genomic_no_space.fna (Species)_genomic
 ```
@@ -120,7 +120,7 @@ bowtie-build Homo_sapiens.GRCh38.dna.primary_assembly_no_space_pl.fa Homo_sapien
 
 ---
 
-## remove "spaces" from ref genome fasta is required by mirDeep2 ( only need to do once per genome)
+### remove "spaces" from ref genome fasta is required by mirDeep2 ( only need to do once per genome)
 ```
 sed 's/ /_/g' genome.fna > genome.fna
 ```
@@ -130,7 +130,7 @@ sed 's/ /_/g' genome.fna > genome.fna
 sed 's/ /_/g' Homo_sapiens.GRCh38.dna.primary_assembly.fna > Homo_sapiens.GRCh38.dna.primary_assembly_no_space.fna
 ```
 
-## Pre-processing steps recommended but no code here
+### Pre-processing steps recommended but no code here
 TrimGalore.
 Post-trim FastX QC analysis.
 Kraken2 is a tool for evaluating the degree of contamination in the individual samples and produces html reports for each sample.
@@ -141,27 +141,27 @@ Note: this bottom section can be converted into a loop / .sh command
 for sample in SRR950892 SRR950893 SRR950894 SRR950895
 #do
 
-## just a notification of which sample we're on
+### just a notification of which sample we're on
 ```
 print f "\n\n    Working on: ${sample}\n\n"
 ```
 
-## gunzip *.fastq.gz
+### gunzip *.fastq.gz
 ```
 gunzip ${sample}.gz
 ```
 
-## remove_white_space script is required to get the quantification tool to function
+### remove_white_space script is required to get the quantification tool to function
 ```
 remove_white_space_in_id.pl ${sample} > ${sample}_trimmed_no_whitespace_pl.fastq
 ```
 
-## Convert the FASTQ files to FASTA format using seqkit:
+### Convert the FASTQ files to FASTA format using seqkit:
 ```
 seqkit fq2fa ${sample}_trimmed.fq.gz -o ${sample}.fa
 ```
 
-## remove white spaces from GeneLab assembly for each species (I recommend using the current "GeneLab" genome)
+### remove white spaces from GeneLab assembly for each species (I recommend using the current "GeneLab" genome)
 ```
 remove_white_space_in_id.pl {species}genome.fa > {species}genome_no_whitespace.fa
 remove_white_space_in_id.pl mature_ut_No-{species}.fa > mature_ut_No-{species}_no_whitespace.fa
@@ -174,12 +174,12 @@ remove_white_space_in_id.pl Homo_sapiens.GRCh38.dna.primary_assembly.fa > Homo_s
 remove_white_space_in_id.pl mature_ut_No-HSA.fa > mature_ut_No-HSA_no_whitespace.fa
 ```
 
-# removing spaces from read fasta (this could probably be the fastq files)
+### removing spaces from read fasta (this could probably be the fastq files)
 ```
 sed 's/ /_/g' ${sample}_trimmed.fa > ${sample}_trimmed_no_spaces.fa
 ```
 
-# running mapping replace sample with file 
+## running mapping replace sample with file 
 
 The `-c` option designates that the input file is a FASTA file (for other input formats, see the `README.md` file).  
 The `-j` options removes entries with non-canonical letters (letters other than `a`, `c`, `g`, `t`, `u`, `n`, `A`, `C`, `G`, `T`, `U`, or `N`). 
@@ -198,7 +198,7 @@ mapper.pl ${sample}_trimmed_no_spaces.fa -c -j -k TCGTATGCCGTCTTCTGCTTGT  -l 18 
 mapper.pl ${sample}_trimmed_no_whitespace_pl.fastq -e -h -j -k TCGTATGCCGTCTTCTGCTTGT  -l 18 -m -p Homo_sapiens.GRCh38.dna.primary_assembly_no_space_pl -s ${sample}_trimmed_collapsed.fa -t ${sample}2_trimmed_collapsed_vs_genome_no_space_pl.arf -v -n 
 ```
 
-# running mirDeep2 with target mature or hairpin templates to identify known and novel miRNAs in the deep sequencing data:
+### running mirDeep2 with target mature or hairpin templates to identify known and novel miRNAs in the deep sequencing data:
 ```
 miRDeep2.pl ${sample}_trimmed_collapsed.fa Homo_sapiens.GRCh38.dna.primary_assembly_no_space_pl.fa ${sample}_trimmed_collapsed_vs_genome_no_space_pl.arf  mature_ut.part_hsa_no_whitespace.fasta mature_ut_No-HSA_NOWHITESPACE.fa hairpin_ut.part_hsa_no_whitespace.fasta -t Human 2>report.log
 ```
